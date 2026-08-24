@@ -1,79 +1,98 @@
 # EBA Tools Hub
 
-Repository unica per strumenti EBA, FinRep e Regulatory Data.
+A single GitHub Pages repository for EBA, regulatory reporting and data management tools.
 
 Link app https://federicomangini83-droid.github.io/EBA-Tools-Hub/
 
-## Applicazione
+## Available tool
 
-Dopo la pubblicazione GitHub Pages:
+### Flat Data Model Creator
 
-- Hub: `https://federicomangini83-droid.github.io/EBAToolsHub/`
-- Flat Data Model: `https://federicomangini83-droid.github.io/EBAToolsHub/tools/flat-data-model/`
+The tool converts a standard Excel workbook into a flat CSV data model directly in the browser. It also supports:
 
-## Struttura
+- local processing with Python and Pyodide;
+- CSV preview and immediate download;
+- GitHub-based CSV storage;
+- replacement of an existing file when the same name is used;
+- download and deletion of stored CSV files;
+- automatic waiting for the GitHub Pages deployment before refreshing the page.
+
+## Published URLs
+
+After enabling GitHub Pages:
 
 ```text
-EBAToolsHub/
+Hub:
+https://federicomangini83-droid.github.io/EBA-Tools-Hub/
+
+Flat Data Model Creator:
+https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/flat-data-model/
+```
+
+## Repository structure
+
+```text
+EBA-Tools-Hub/
 ├── index.html
+├── README.md
+├── .nojekyll
 ├── assets/
-│   └── css/hub.css
+│   └── css/
+│       └── hub.css
 ├── tools/
 │   └── flat-data-model/
 │       ├── index.html
-│       ├── css/style.css
-│       ├── js/app.js
-│       └── python/finrep_processor.py
+│       ├── css/
+│       │   └── style.css
+│       ├── js/
+│       │   └── app.js
+│       └── python/
+│           └── flat_data_model_processor.py
 └── storage/
     └── flat-data-model/
         └── .gitkeep
 ```
 
-## Pubblicazione
+## GitHub token
 
-1. Crea la repository pubblica `EBAToolsHub`.
-2. Carica nella root tutto il contenuto dello ZIP.
-3. Vai in `Settings > Pages`.
-4. Seleziona `Deploy from a branch`, branch `main`, cartella `/ (root)`.
-5. Attendi il deployment.
-
-## Token GitHub
-
-Il token usato nella vecchia repository non funzionerà automaticamente se era limitato solo a `FlatDataModel`.
-Crea o modifica un fine-grained personal access token con:
-
-- repository selezionata: `EBAToolsHub`;
-- permesso repository `Contents: Read and write`.
-
-Inseriscilo nel tool in `Configurazione GitHub`.
-
-## Storico e accesso esterno
-
-I CSV vengono archiviati in:
+Saving and deleting files requires a fine-grained personal access token configured with:
 
 ```text
-storage/flat-data-model/
+Repository: EBA-Tools-Hub
+Repository permission: Contents - Read and write
 ```
 
-Elenco via GitHub API:
+The token is entered in the tool under **GitHub configuration**. If **Remember the token in this browser** is selected, the token is stored only in that browser's local storage.
+
+## CSV API access
+
+List the stored files through the GitHub Contents API:
 
 ```text
-https://api.github.com/repos/federicomangini83-droid/EBAToolsHub/contents/storage/flat-data-model
+https://api.github.com/repos/federicomangini83-droid/EBA-Tools-Hub/contents/storage/flat-data-model
 ```
 
-File raw:
+Retrieve a CSV directly:
 
 ```text
-https://raw.githubusercontent.com/federicomangini83-droid/EBAToolsHub/main/storage/flat-data-model/NOME_FILE.csv
+https://raw.githubusercontent.com/federicomangini83-droid/EBA-Tools-Hub/main/storage/flat-data-model/FILE_NAME.csv
 ```
 
-## Aggiunta di un nuovo tool
+## Adding another tool
 
-Per ogni nuovo strumento:
+Use the same structure for every new tool:
 
 ```text
-tools/nome-tool/
-storage/nome-tool/
+tools/new-tool/
+storage/new-tool/
 ```
 
-Poi aggiungi una card nella homepage `index.html`.
+Then add a new card to the root `index.html` catalogue.
+
+## GitHub Pages publication
+
+1. Upload the contents of this package to the root of the `EBA-Tools-Hub` repository.
+2. Open `Settings > Pages`.
+3. Select `Deploy from a branch`.
+4. Select branch `main` and folder `/ (root)`.
+5. Wait for the deployment to complete.
