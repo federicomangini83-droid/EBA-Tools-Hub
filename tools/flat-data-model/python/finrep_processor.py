@@ -1,4 +1,5 @@
-import csv,io,json,openpyxl
+"""Browser-compatible Excel-to-flat-CSV processing engine."""
+import csv, io, json, openpyxl
 FIELDS=['Id_Tab','Row','Column','Cod_Conto','Cod_Dest2','Cod_Dest3','Cod_Dest4','Cod_Dest5','Cod_Categoria','Formula','Calculation_Logic','DB_Storage_Sign','EBA_Sign','Coordinate']
 def rgb(c): return getattr(c.fill.fgColor,'rgb',None)
 def between(t,a,b):
@@ -13,9 +14,9 @@ def parse(v):
  elif A not in t and F in t and L not in t:r.update(Formula=between(t,F,S),DB_Storage_Sign=between(t,S,E),EBA_Sign=last(t,E))
  else:return None
  return r if r['EBA_Sign'] is not None else None
-def process_finrep(path):
+def process_workbook(path):
  w=openpyxl.load_workbook(path,data_only=False);names=w.sheetnames
- if not names:raise ValueError('Il file Excel non contiene fogli validi.')
+ if not names:raise ValueError('The Excel file does not contain valid worksheets.')
  ref=w[names[0]];color=rgb(ref['A1']);rs=ref['A2']._style;cs=ref['B1']._style;cols={};rows={};maxc={};maxr={}
  for n in names:
   sh=w[n];cc=cr=1
