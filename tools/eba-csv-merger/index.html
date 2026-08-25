@@ -17,9 +17,7 @@
 
     <main class="container">
         <h1>EBA CSV Merger</h1>
-        <p class="subtitle">
-            Merge and enrich EBA CSV files locally in the browser. Source files are not uploaded to a server.
-        </p>
+        <p class="subtitle">Merge and enrich EBA CSV files locally in the browser. Source files are not uploaded to a server.</p>
 
         <section class="card runtime-card">
             <div>
@@ -34,15 +32,13 @@
 
         <section class="card">
             <h2>1. Select input CSV files</h2>
-
             <div class="picker-row">
                 <label class="file-picker" for="csvFiles">Choose CSV files</label>
                 <input id="csvFiles" type="file" accept=".csv,text/csv" multiple>
 
                 <label class="file-picker folder-picker" for="csvFolder">Choose folder</label>
-                <input id="csvFolder" type="file" accept=".csv,text/csv" webkitdirectory directory multiple>
+                <input id="csvFolder" type="file" webkitdirectory multiple>
             </div>
-
             <p id="selectionSummary" class="hint">No files selected.</p>
             <div id="selectedFiles" class="selected-files hidden"></div>
         </section>
@@ -53,16 +49,9 @@
                 <label for="outputName">Output file name</label>
                 <input id="outputName" type="text" value="EBA_Merged_Output.csv">
             </div>
-
             <div class="mapping-info">
-                <div>
-                    <span class="mapping-label">Mapping workbook</span>
-                    <code>EBA_reporting_framework.xlsx</code>
-                </div>
-                <div>
-                    <span class="mapping-label">Mapping sheet</span>
-                    <code>Mapping_dpm2_df_All</code>
-                </div>
+                <div><span class="mapping-label">Mapping workbook</span><code>EBA_reporting_framework.xlsx</code></div>
+                <div><span class="mapping-label">Mapping sheet</span><code>Mapping_dpm2_df_All</code></div>
             </div>
         </section>
 
@@ -76,30 +65,13 @@
 
         <section id="resultBox" class="card hidden">
             <div class="result-head">
-                <div>
-                    <h2>Result</h2>
-                    <p id="resultSummary" class="hint"></p>
-                </div>
+                <div><h2>Result</h2><p id="resultSummary" class="hint"></p></div>
                 <button id="downloadBtn">Download merged CSV</button>
             </div>
-
             <div id="stats" class="stats"></div>
-
-            <div class="table-wrap">
-                <table id="previewTable"></table>
-            </div>
+            <div class="table-wrap"><table id="previewTable"></table></div>
         </section>
 
-        <section class="card">
-            <div class="log-head">
-                <div>
-                    <h2>Processing log</h2>
-                    <p class="hint">The log is generated locally during processing.</p>
-                </div>
-                <button id="clearLogBtn" class="secondary">Clear log</button>
-            </div>
-            <pre id="logOutput" class="log-output">Waiting for input files...</pre>
-        </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
