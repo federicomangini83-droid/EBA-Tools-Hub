@@ -201,3 +201,10 @@ downloadBtn.addEventListener("click", downloadResult);
 clearLogBtn.addEventListener("click", () => { logOutput.textContent = "Waiting for input files..."; });
 outputName.addEventListener("blur", normaliseOutputName);
 updateProcessButton();
+
+const processingLogCard =
+    document.getElementById("processingLogCard");
+
+if (processingLogCard) {
+    processingLogCard.style.display = "none";
+}
