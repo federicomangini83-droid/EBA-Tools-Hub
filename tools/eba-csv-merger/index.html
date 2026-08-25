@@ -72,6 +72,13 @@
             <div class="table-wrap"><table id="previewTable"></table></div>
         </section>
 
+        <section class="card">
+            <div class="log-head">
+                <div><h2>Processing log</h2><p class="hint">The log is generated locally during processing.</p></div>
+                <button id="clearLogBtn" class="secondary">Clear log</button>
+            </div>
+            <pre id="logOutput" class="log-output">Waiting for input files...</pre>
+        </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
