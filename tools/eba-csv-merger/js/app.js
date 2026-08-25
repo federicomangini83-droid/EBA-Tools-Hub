@@ -26,11 +26,48 @@ let mergedCsv = "";
 let isProcessing = false;
 let selectedFileList = [];
 
+const requiredElements = {
+    csvFiles,
+    csvFolder,
+    outputName,
+    processBtn,
+    spinner,
+    processingStatus,
+    statusDot,
+    runtimeStatus,
+    selectionSummary,
+    selectedFilesBox,
+    errorBox,
+    resultBox,
+    resultSummary,
+    stats,
+    previewTable,
+    downloadBtn,
+    clearLogBtn,
+    logOutput
+};
+
+const missingElements = Object.entries(requiredElements)
+    .filter(([, element]) => !element)
+    .map(([name]) => name);
+
+if (missingElements.length) {
+    throw new Error(`HTML/JavaScript mismatch. Missing elements: ${missingElements.join(", ")}`);
+}
+
 function isCsv(file) {
     return file.name.trim().toLowerCase().endsWith(".csv");
 }
-function showError(message) { errorBox.textContent = message; errorBox.classList.remove("hidden"); }
-function clearError() { errorBox.textContent = ""; errorBox.classList.add("hidden"); }
+function showError(message) {
+    if (!errorBox) { console.error(message); return; }
+    errorBox.textContent = message;
+    errorBox.classList.remove("hidden");
+}
+function clearError() {
+    if (!errorBox) return;
+    errorBox.textContent = "";
+    errorBox.classList.add("hidden");
+}
 function updateProcessButton() { processBtn.disabled = !pyodide || !selectedFileList.length || isProcessing; }
 function setRuntimeState(state, message) {
     statusDot.classList.toggle("ready", state === "ready");
@@ -136,7 +173,9 @@ async function processFiles() {
         const result = JSON.parse(await pyodide.runPythonAsync("process_csv_files(input_paths_json, mapping_path_from_js)"));
         mergedCsv = result.csv;
         renderLog(result.logs || []); renderStats(result); renderPreview(result.preview || [], result.columns || []);
-        resultSummary.textContent = `${Number(result.row_count).toLocaleString()} rows generated. ${Number(result.unmapped_rows).toLocaleString()} rows have no mapping coordinates.`;
+        if (resultSummary) {
+            resultSummary.textContent = `${Number(result.row_count).toLocaleString()} rows generated. ${Number(result.unmapped_rows).toLocaleString()} rows have no mapping coordinates.`;
+        }
         resultBox.classList.remove("hidden"); setProcessing(false, "Processing completed.");
     } catch (error) {
         showError(`Processing error: ${error.message}`); setProcessing(false, "Processing failed."); console.error(error);
