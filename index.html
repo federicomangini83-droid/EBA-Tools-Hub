@@ -1,1 +1,60 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EBA Tools Hub</title><link rel="stylesheet" href="./assets/css/hub.css"></head><body><header class="hero"><div class="wrap"><p class="eyebrow">REGULATORY TOOLKIT</p><h1>EBA Tools Hub</h1><p>A single workspace for EBA, regulatory reporting and data management tools.</p></div></header><main class="wrap"><section class="intro"><h2>Tool catalogue</h2><p>The hub is ready to host additional tools in one repository.</p></section><section class="grid"><article class="tool-card"><div class="tool-top"><span class="tool-icon">FD</span><span class="status">Available</span></div><h3>Flat Data Model Creator</h3><p>Transforms a standard Excel workbook into a flat CSV data model, with GitHub storage.</p><ul><li>Local Python processing</li><li>Versioned CSV storage</li><li>Raw access for external software</li></ul><a class="button" href="./tools/flat-data-model/">Open tool</a></article><article class="tool-card placeholder"><div class="tool-top"><span class="tool-icon">+</span><span class="status neutral">Planned</span></div><h3>New EBA tool</h3><p>Ready for the next tool.</p></article></section></main><footer class="wrap">EBA Tools Hub · GitHub Pages</footer></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A central hub for EBA and regulatory data tools.">
+  <title>EBA Tools Hub</title>
+  <link rel="stylesheet" href="./assets/css/hub.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">REGULATORY TOOLKIT</p>
+      <h1>EBA Tools Hub</h1>
+      <p class="hero-copy">A single workspace for EBA, regulatory reporting and data management tools.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="intro">
+      <h2>Tool catalogue</h2>
+      <p>The hub hosts independent browser-based tools within one repository and one GitHub Pages deployment.</p>
+    </section>
+
+    <section class="grid" aria-label="Available tools">
+      <article class="tool-card">
+        <div class="tool-top"><span class="tool-icon">FD</span><span class="status">Available</span></div>
+        <h3>Flat Data Model Creator</h3>
+        <p>Transforms a standard Excel workbook into a flat CSV data model, with GitHub storage, download and deletion.</p>
+        <ul>
+          <li>Local Python processing in the browser</li>
+          <li>Versioned CSV storage</li>
+          <li>Raw file access for external software</li>
+        </ul>
+        <a class="button" href="./tools/flat-data-model/">Open tool</a>
+      </article>
+
+      <article class="tool-card">
+        <div class="tool-top"><span class="tool-icon">CM</span><span class="status">Available</span></div>
+        <h3>EBA CSV Merger</h3>
+        <p>Merges multiple EBA CSV files and enriches the result with coordinates from the reporting framework workbook.</p>
+        <ul>
+          <li>Fully browser-based Pyodide processing</li>
+          <li>Robust encoding and separator detection</li>
+          <li>Local download of the consolidated CSV</li>
+        </ul>
+        <a class="button" href="./tools/eba-csv-merger/">Open tool</a>
+      </article>
+
+      <article class="tool-card placeholder">
+        <div class="tool-top"><span class="tool-icon">+</span><span class="status neutral">Planned</span></div>
+        <h3>New EBA tool</h3>
+        <p>This area is ready for the next tool added to the catalogue.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="wrap">EBA Tools Hub · GitHub Pages</footer>
+</body>
+</html>
