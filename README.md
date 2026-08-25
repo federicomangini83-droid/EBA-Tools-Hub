@@ -9,9 +9,9 @@ Single GitHub Pages repository for EBA and regulatory data tools.
 
 ## URLs
 
-- Hub: `https://federicomangini83-droid.github.io/EBA-Tools-Hub/`
-- Tool: `https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/flat-data-model/`
-- Tool: `https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/eba-csv-merger/`
+- Hub: https://federicomangini83-droid.github.io/EBA-Tools-Hub/
+- Tool: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/flat-data-model/
+- Tool: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/eba-csv-merger/
 
 ## Storage
 
