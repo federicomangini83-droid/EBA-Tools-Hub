@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Merge EBA CSV files in the browser and enrich the result with reporting framework coordinates.">
+  <title>EBA CSV Merger · EBA Tools Hub</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <a href="../../">← EBA Tools Hub</a>
+      <span>EBA CSV Merger</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>EBA CSV Merger</h1>
+    <p class="subtitle">Merge and enrich EBA CSV files locally in the browser. Source files are not uploaded to a server.</p>
+
+    <section class="card runtime-card">
+      <div>
+        <h2>Processing engine</h2>
+        <p>Python, pandas and the reporting framework mapping run directly in the browser.</p>
+      </div>
+      <div class="runtime-status">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="runtimeStatus">Preparing Python engine...</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. Select input CSV files</h2>
+      <label class="file-picker" for="csvFiles">Choose CSV files</label>
+      <input id="csvFiles" type="file" accept=".csv,text/csv" multiple>
+      <p id="selectionSummary" class="hint">No files selected.</p>
+      <div id="selectedFiles" class="selected-files hidden"></div>
+    </section>
+
+    <section class="card">
+      <h2>2. Output settings</h2>
+      <div class="field">
+        <label for="outputName">Output file name</label>
+        <input id="outputName" type="text" value="EBA_Merged_Output.csv">
+      </div>
+      <div class="mapping-info">
+        <div><span class="mapping-label">Mapping workbook</span><code>EBA_reporting_framework.xlsx</code></div>
+        <div><span class="mapping-label">Mapping sheet</span><code>Mapping_dpm2_df_All</code></div>
+      </div>
+    </section>
+
+    <section class="card action-card">
+      <button id="processBtn" disabled>Process files</button>
+      <span id="spinner" class="spinner hidden" aria-hidden="true"></span>
+      <span id="processingStatus" class="hint"></span>
+    </section>
+
+    <section id="errorBox" class="error hidden" role="alert"></section>
+
+    <section id="resultBox" class="card hidden">
+      <div class="result-head">
+        <div>
+          <h2>Result</h2>
+          <p id="resultSummary" class="hint"></p>
+        </div>
+        <button id="downloadBtn">Download merged CSV</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="log-head">
+        <div>
+          <h2>Processing log</h2>
+          <p class="hint">The log is generated locally during processing.</p>
+        </div>
+        <button id="clearLogBtn" class="secondary">Clear log</button>
+      </div>
+      <pre id="logOutput" class="log-output">Waiting for input files...</pre>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
