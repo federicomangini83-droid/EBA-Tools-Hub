@@ -2,20 +2,24 @@
 
 Single GitHub Pages repository for EBA and regulatory data tools.
 
-## Available tool
+## Available tools
 
 - Flat Data Model Creator
 - EBA CSV Merger
+- DPM 2.0 Taxonomy Extractor
 
 ## URLs
 
 - Hub: https://federicomangini83-droid.github.io/EBA-Tools-Hub/
-- Tool: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/flat-data-model/
-- Tool: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/eba-csv-merger/
+- Flat Data Model Creator: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/flat-data-model/
+- EBA CSV Merger: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/eba-csv-merger/
+- DPM 2.0 Taxonomy Extractor: https://federicomangini83-droid.github.io/EBA-Tools-Hub/tools/dpm-2-taxonomy-extractor/
 
 ## Storage
 
-CSV files are stored in `storage/flat-data-model/`.
+- Flat Data Model Creator: `storage/flat-data-model/`
+- EBA CSV Merger: `storage/eba-csv-merger/`
+- DPM 2.0 Taxonomy Extractor: `storage/dpm-2-taxonomy-extractor/`
 
 ## GitHub token
 
