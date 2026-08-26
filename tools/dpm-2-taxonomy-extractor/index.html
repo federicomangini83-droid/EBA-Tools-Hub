@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Extract DPM 2.0 taxonomy tables from EBA JSON files.">
+  <title>DPM 2.0 Taxonomy Extractor · EBA Tools Hub</title>
+  <link rel="stylesheet" href="./css/style.css?v=3">
+</head>
+<body>
+<header><div class="topbar"><a href="../../">← EBA Tools Hub</a><span>DPM 2.0 Taxonomy Extractor</span></div></header>
+<main class="container">
+  <h1>DPM 2.0 Taxonomy Extractor</h1>
+  <p class="subtitle">Extract DPM 2.0 taxonomy tables from EBA JSON files and build a consolidated Excel workbook locally in the browser.</p>
+
+  <section class="card runtime-card">
+    <div><h2>Processing engine</h2><p>Python and pandas run directly in the browser through Pyodide.</p></div>
+    <div class="runtime-status"><span id="statusDot" class="status-dot"></span><span id="runtimeStatus">Preparing Python engine...</span></div>
+  </section>
+
+  <section class="card">
+    <h2>1. Select the taxonomy folder</h2>
+    <p class="hint">Select the taxonomy root folder. JSON files inside a <code>tab</code> path are detected recursively.</p>
+    <label class="file-picker" for="jsonFolder">Choose folder</label>
+    <input id="jsonFolder" type="file" webkitdirectory multiple>
+    <p id="selectionSummary" class="hint">No folder selected.</p>
+    <div id="selectedFiles" class="selected-files hidden"></div>
+  </section>
+
+  <section class="card">
+    <h2>2. Filters and output</h2>
+    <div class="params">
+      <div><label for="excludeList">Exclude list</label><input id="excludeList" value="dora"><small class="hint">Comma separated. Matching paths are skipped.</small></div>
+      <div><label for="specificList">Specific list</label><input id="specificList" value="4.3"><small class="hint">Comma separated. Leave empty to accept every path.</small></div>
+    </div>
+    <div class="field"><label for="outputName">Output file name</label><input id="outputName" value="EBA_reporting_framework.xlsx"></div>
+    <p class="hint">Matching files: <strong id="matchCount">0</strong></p>
+  </section>
+
+  <section class="card action"><button id="processBtn" disabled>Process taxonomy</button><span id="spinner" class="spinner hidden"></span><span id="processingStatus" class="hint"></span></section>
+  <section id="errorBox" class="error hidden"></section>
+
+  <section id="resultBox" class="card hidden">
+    <div class="head"><div><h2>Result</h2><p id="resultSummary" class="hint"></p></div><div class="buttons"><button id="downloadBtn" class="secondary">Download workbook</button><button id="saveGithubBtn">Save to GitHub storage</button></div></div>
+    <p id="archiveStatus" class="hint"></p>
+    <div id="stats" class="stats"></div>
+    <h3>Generated sheets</h3><div class="table-wrap"><table id="sheetsTable"></table></div>
+    <h3>Mapping preview</h3><div class="table-wrap"><table id="previewTable"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="head"><div><h2>Workbook history</h2><p class="hint">Files stored in <code>storage/dpm-2-taxonomy-extractor/</code>.</p></div><button id="refreshHistoryBtn" class="secondary">Refresh list</button></div>
+    <details><summary>GitHub configuration</summary>
+      <div class="gh-grid">
+        <div><label for="ghOwner">Owner</label><input id="ghOwner" value="federicomangini83-droid"></div>
+        <div><label for="ghRepo">Repository</label><input id="ghRepo" value="EBA-Tools-Hub"></div>
+        <div><label for="ghBranch">Branch</label><input id="ghBranch" value="main"></div>
+        <div><label for="ghFolder">Storage folder</label><input id="ghFolder" value="storage/dpm-2-taxonomy-extractor"></div>
+      </div>
+      <label for="ghToken">GitHub token</label><input id="ghToken" type="password" placeholder="github_pat_...">
+      <label class="remember"><input id="ghRemember" type="checkbox"> Remember the token in this browser</label>
+    </details>
+    <div id="historyError" class="error hidden"></div>
+    <div class="table-wrap"><table id="historyTable"><thead><tr><th>File name</th><th>Size</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="processingLogCard" class="card hidden"><button id="clearLogBtn">Clear</button><pre id="logOutput"></pre></section>
+</main>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
+<script src="./js/app.js?v=3"></script>
+</body>
+</html>
