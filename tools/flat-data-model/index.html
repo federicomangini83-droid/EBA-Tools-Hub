@@ -39,7 +39,12 @@
           <input id="endName" value="_420">
         </div>
       </div>
-      <p class="hint">Generated file: <code id="fileNamePreview"></code></p>
+      <p class="hint">Generated archive: <code id="fileNamePreview"></code></p>
+      <p class="hint">
+        The archive contains two files: <code>&lt;name&gt;_raw.csv</code> with the mapping as extracted,
+        and <code>&lt;name&gt;_exploded.csv</code> with <code>Cod_Dest3</code> split into one row per value
+        and every <code>SUM(...)</code> resolved down to its detail rows.
+      </p>
     </section>
 
     <section class="card action">
@@ -52,11 +57,18 @@
     <section id="resultBox" class="card hidden">
       <h2>Result</h2>
       <p id="recordCount"></p>
+
+      <div class="tabs">
+        <button id="tabRaw" class="tab active">Raw</button>
+        <button id="tabExploded" class="tab">Exploded</button>
+      </div>
+
       <div class="table-wrap">
         <table id="resultTable"></table>
       </div>
+
       <div class="buttons">
-        <button id="downloadBtn" class="secondary">Download CSV</button>
+        <button id="downloadBtn" class="secondary">Download ZIP</button>
         <button id="saveGithubBtn">Save to GitHub storage</button>
       </div>
       <p id="archiveStatus" class="hint"></p>
@@ -65,7 +77,7 @@
     <section class="card">
       <div class="history-head">
         <div>
-          <h2>CSV history</h2>
+          <h2>Archive history</h2>
           <p class="hint">Files stored in <code>storage/flat-data-model/</code>.</p>
         </div>
         <button id="refreshHistoryBtn" class="secondary">Refresh list</button>
