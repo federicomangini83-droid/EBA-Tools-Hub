@@ -23,10 +23,14 @@ const ghBranch = $("ghBranch");
 const ghFolder = $("ghFolder");
 const ghToken = $("ghToken");
 const ghRemember = $("ghRemember");
+const tabRaw = $("tabRaw");
+const tabExploded = $("tabExploded");
 
 let pyodide = null;
-let lastCSV = "";
-let lastFileName = "output.csv";
+let lastZipBytes = null;
+let lastFileName = "output.zip";
+let lastPreview = { raw: [], exploded: [] };
+let activeTab = "raw";
 let processing = false;
 
 const TOKEN_KEY = "eba_tools_hub_github_token";
@@ -54,8 +58,13 @@ function apiHeaders(config, authenticated = false) {
   return result;
 }
 
+/* nome senza estensione: serve sia allo ZIP sia ai CSV interni */
+function baseName() {
+  return `${startNameInput.value || ""}${prefixInput.value || ""}${endNameInput.value || ""}`;
+}
+
 function outputName() {
-  return `${startNameInput.value || ""}${prefixInput.value || ""}${endNameInput.value || ""}.csv`;
+  return `${baseName()}.zip`;
 }
 
 function setBusy(value, label = "Process file") {
@@ -67,10 +76,21 @@ function setBusy(value, label = "Process file") {
   processBtn.textContent = value ? label : "Process file";
 }
 
-function toBase64(text) {
-  const bytes = new TextEncoder().encode(text);
+/* base64 -> Uint8Array (lo ZIP arriva da Python codificato) */
+function fromBase64(text) {
+  const binary = atob(text);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/* Uint8Array -> base64, a blocchi per non saturare lo stack su file grandi */
+function toBase64(bytes) {
   let binary = "";
-  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  const chunk = 32768;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
   return btoa(binary);
 }
 
@@ -86,19 +106,27 @@ function sizeLabel(size) {
 
 function renderResults(records) {
   resultTable.innerHTML = "";
-  const columns = Object.keys(records[0] || {});
+  if (!records.length) return;
+  const columns = Object.keys(records[0]);
   const head = document.createElement("thead");
   const headRow = document.createElement("tr");
   columns.forEach((column) => { const th = document.createElement("th"); th.textContent = column; headRow.append(th); });
   head.append(headRow);
   resultTable.append(head);
   const body = document.createElement("tbody");
-  records.slice(0, 200).forEach((record) => {
+  records.forEach((record) => {
     const row = document.createElement("tr");
     columns.forEach((column) => { const cell = document.createElement("td"); cell.textContent = record[column] ?? ""; row.append(cell); });
     body.append(row);
   });
   resultTable.append(body);
+}
+
+function showTab(name) {
+  activeTab = name;
+  tabRaw.classList.toggle("active", name === "raw");
+  tabExploded.classList.toggle("active", name === "exploded");
+  renderResults(name === "raw" ? lastPreview.raw : lastPreview.exploded);
 }
 
 const pythonReady = (async () => {
@@ -121,25 +149,30 @@ async function getStoredFile(config, fileName) {
   return response.json();
 }
 
-async function saveFile(config, fileName, csv) {
+/* lo ZIP e' binario: niente BOM, niente conversione da testo */
+async function saveFile(config, fileName, bytes) {
   const previous = await getStoredFile(config, fileName);
-  const body = { message: `${previous ? "Update" : "Add"} CSV: ${fileName}`, content: toBase64("\uFEFF" + csv), branch: config.branch };
+  const body = { message: `${previous ? "Update" : "Add"} ZIP: ${fileName}`, content: toBase64(bytes), branch: config.branch };
   if (previous?.sha) body.sha = previous.sha;
   const response = await fetch(`${apiBase(config)}/${encodeURIComponent(fileName)}`, { method: "PUT", headers: { ...apiHeaders(config, true), "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!response.ok) throw new Error(`Save failed: HTTP ${response.status} ${await response.text()}`);
 }
 
 async function deleteFile(config, item) {
-  const response = await fetch(`${apiBase(config)}/${encodeURIComponent(item.name)}`, { method: "DELETE", headers: { ...apiHeaders(config, true), "Content-Type": "application/json" }, body: JSON.stringify({ message: `Delete CSV: ${item.name}`, sha: item.sha, branch: config.branch }) });
+  const response = await fetch(`${apiBase(config)}/${encodeURIComponent(item.name)}`, { method: "DELETE", headers: { ...apiHeaders(config, true), "Content-Type": "application/json" }, body: JSON.stringify({ message: `Delete file: ${item.name}`, sha: item.sha, branch: config.branch }) });
   if (!response.ok) throw new Error(`Delete failed: HTTP ${response.status} ${await response.text()}`);
 }
 
-async function waitForDeployment(config, fileName, shouldExist, expectedCsv = "") {
+/* confronto per dimensione: il testo non e' applicabile a un binario */
+async function waitForDeployment(config, fileName, shouldExist, expectedSize = 0) {
   const started = Date.now();
   while (Date.now() - started < DEPLOY_TIMEOUT) {
     const response = await fetch(`${publishedUrl(config, fileName)}?v=${Date.now()}`, { cache: "no-store" });
     if (!shouldExist && response.status === 404) return;
-    if (shouldExist && response.ok && (await response.text()).replace(/^\uFEFF/, "") === expectedCsv.replace(/^\uFEFF/, "")) return;
+    if (shouldExist && response.ok) {
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength === expectedSize) return;
+    }
     await sleep(POLL_INTERVAL);
   }
   throw new Error("GitHub Pages did not complete the deployment within 3 minutes.");
@@ -218,8 +251,11 @@ async function loadHistory() {
     const response = await fetch(`${apiBase(config)}?ref=${encodeURIComponent(config.branch)}&v=${Date.now()}`, { headers: apiHeaders(config, Boolean(config.token)), cache: "no-store" });
     const items = response.status === 404 ? [] : await response.json();
     if (!response.ok && response.status !== 404) throw new Error(`History unavailable: HTTP ${response.status}`);
-    items.filter((item) => item.type === "file" && item.name.toLowerCase().endsWith(".csv")).sort((a, b) => a.name.localeCompare(b.name)).forEach((item) => body.append(createHistoryRow(item)));
-    if (!body.children.length) { const row = document.createElement("tr"); const cell = document.createElement("td"); cell.colSpan = 3; cell.textContent = "No CSV files are currently stored."; row.append(cell); body.append(row); }
+    items
+      .filter((item) => item.type === "file" && /\.(zip|csv)$/i.test(item.name))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((item) => body.append(createHistoryRow(item)));
+    if (!body.children.length) { const row = document.createElement("tr"); const cell = document.createElement("td"); cell.colSpan = 3; cell.textContent = "No files are currently stored."; row.append(cell); body.append(row); }
   } catch (error) {
     historyError.textContent = error.message;
     historyError.classList.remove("hidden");
@@ -241,14 +277,22 @@ processBtn.onclick = async () => {
     await pythonReady;
     pyodide.FS.writeFile(path, new Uint8Array(await file.arrayBuffer()));
     pyodide.globals.set("workbook_path_from_js", path);
-    const result = JSON.parse(await pyodide.runPythonAsync("process_workbook(workbook_path_from_js)"));
-    if (!result.records.length) throw new Error("No valid records were found.");
-    lastCSV = result.csv;
+    pyodide.globals.set("base_name_from_js", baseName() || "mapping");
+    const result = JSON.parse(await pyodide.runPythonAsync(
+      "process_workbook(workbook_path_from_js, base_name_from_js)"
+    ));
+    if (!result.count) throw new Error("No valid records were found.");
+
+    lastZipBytes = fromBase64(result.zip_base64);
     lastFileName = outputName();
-    renderResults(result.records);
-    recordCount.textContent = `Total records: ${result.count} (preview limited to the first 200 rows)`;
+    lastPreview = { raw: result.preview || [], exploded: result.preview_exploded || [] };
+
+    showTab("raw");
+    recordCount.textContent =
+      `${result.files[0]}: ${result.count} rows — ${result.files[1]}: ${result.count_exploded} rows ` +
+      `(preview limited to the first 200 rows of each file)`;
     resultBox.classList.remove("hidden");
-    archiveStatus.textContent = "CSV ready. Download it or save it to GitHub storage.";
+    archiveStatus.textContent = `ZIP ready (${sizeLabel(lastZipBytes.length)}). Download it or save it to GitHub storage.`;
   } catch (error) {
     errorBox.textContent = `Processing error: ${error.message}`;
     errorBox.classList.remove("hidden");
@@ -256,20 +300,21 @@ processBtn.onclick = async () => {
     setBusy(false);
     try { pyodide.FS.unlink(path); } catch (_) {}
     try { pyodide.globals.delete("workbook_path_from_js"); } catch (_) {}
+    try { pyodide.globals.delete("base_name_from_js"); } catch (_) {}
   }
 };
 
 saveGithubBtn.onclick = async () => {
   const config = getConfig();
-  if (!lastCSV) return archiveStatus.textContent = "Generate a CSV first.";
+  if (!lastZipBytes) return archiveStatus.textContent = "Generate a ZIP first.";
   if (!config.token) return archiveStatus.textContent = "Enter the GitHub token first.";
   saveGithubBtn.disabled = true;
   saveGithubBtn.textContent = "Saving...";
   try {
-    await saveFile(config, lastFileName, lastCSV);
+    await saveFile(config, lastFileName, lastZipBytes);
     saveGithubBtn.textContent = "Waiting for deployment...";
     archiveStatus.textContent = `Commit created. Waiting for ${lastFileName} to be published...`;
-    await waitForDeployment(config, lastFileName, true, lastCSV);
+    await waitForDeployment(config, lastFileName, true, lastZipBytes.length);
     location.reload();
   } catch (error) {
     archiveStatus.textContent = error.message;
@@ -279,7 +324,8 @@ saveGithubBtn.onclick = async () => {
 };
 
 downloadBtn.onclick = () => {
-  const url = URL.createObjectURL(new Blob(["\uFEFF", lastCSV], { type: "text/csv" }));
+  if (!lastZipBytes) return;
+  const url = URL.createObjectURL(new Blob([lastZipBytes], { type: "application/zip" }));
   const link = document.createElement("a");
   link.href = url;
   link.download = lastFileName;
@@ -288,6 +334,9 @@ downloadBtn.onclick = () => {
   link.remove();
   URL.revokeObjectURL(url);
 };
+
+tabRaw.onclick = () => showTab("raw");
+tabExploded.onclick = () => showTab("exploded");
 
 [startNameInput, prefixInput, endNameInput].forEach((input) => { input.oninput = () => fileNamePreview.textContent = outputName(); });
 refreshHistoryBtn.onclick = loadHistory;
