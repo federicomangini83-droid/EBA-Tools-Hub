@@ -326,7 +326,8 @@ def to_csv(records):
     return buffer.getvalue()
 
 
-def to_zip(raw_csv, exploded_csv):
+def to_zip(files):
+    """files = [(name, text), ...] -> bytes dello ZIP."""
     buffer = io.BytesIO()
 
     with zipfile.ZipFile(
@@ -334,8 +335,8 @@ def to_zip(raw_csv, exploded_csv):
         mode="w",
         compression=zipfile.ZIP_DEFLATED
     ) as archive:
-        archive.writestr("mapping_raw.csv", raw_csv)
-        archive.writestr("mapping_exploded.csv", exploded_csv)
+        for name, text in files:
+            archive.writestr(name, "\ufeff" + text)
 
     return buffer.getvalue()
 
@@ -467,37 +468,29 @@ def extract_records(path):
     return records
 
 
-def process_workbook(path, zip_path=None):
+def process_workbook(path, base_name="mapping", preview_rows=200):
+    """Restituisce un JSON con lo ZIP in base64 e le anteprime per la UI."""
     records = extract_records(path)
     exploded = explode_records(records)
 
-    raw_csv = to_csv(records)
-    exploded_csv = to_csv(exploded)
+    raw_name = base_name + "_raw.csv"
+    exploded_name = base_name + "_exploded.csv"
 
-    archive = to_zip(raw_csv, exploded_csv)
-
-    if zip_path:
-        with open(zip_path, "wb") as handle:
-            handle.write(archive)
+    archive = to_zip(
+        [
+            (raw_name, to_csv(records)),
+            (exploded_name, to_csv(exploded)),
+        ]
+    )
 
     return json.dumps(
         {
             "zip_base64": base64.b64encode(archive).decode("ascii"),
-            "zip_name": "mapping.zip",
-            "files": ["mapping_raw.csv", "mapping_exploded.csv"],
+            "files": [raw_name, exploded_name],
             "count": len(records),
             "count_exploded": len(exploded),
+            "preview": records[:preview_rows],
+            "preview_exploded": exploded[:preview_rows],
         },
         ensure_ascii=False,
-    )
-
-
-if __name__ == "__main__":
-    import sys
-
-    print(
-        process_workbook(
-            sys.argv[1],
-            sys.argv[2] if len(sys.argv) > 2 else "mapping.zip",
-        )[:400]
     )
