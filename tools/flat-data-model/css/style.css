@@ -1,21 +1,51 @@
+/* ==================================================================== */
+/*  Flat Data Model Creator — stylesheet completo                       */
+/* ==================================================================== */
+
+:root {
+    --bg: #f5f7fa;
+    --surface: #fff;
+    --border: #d5dee7;
+    --border-soft: #dfe5eb;
+    --text: #1f2937;
+    --muted: #64748b;
+    --header: #102a43;
+    --green: #1f883d;
+    --green-dark: #1a7233;
+    --blue: #1769aa;
+    --blue-dark: #145a92;
+    --red: #cf222e;
+    --red-dark: #b21d28;
+    --focus: #2563eb;
+}
+
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    background: #f5f7fa;
-    color: #1f2937;
+    background: var(--bg);
+    color: var(--text);
     font-family:
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
         sans-serif;
+    line-height: 1.5;
 }
 
+/* -------------------------------------------------------------------- */
+/*  Header                                                              */
+/* -------------------------------------------------------------------- */
+
 header {
-    background: #102a43;
+    background: var(--header);
     color: #fff;
+
+    position: sticky;
+    top: 0;
+    z-index: 20;
 }
 
 .topbar {
@@ -24,46 +54,107 @@ header {
     padding: 15px 24px;
 
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 16px;
 }
 
 .topbar a {
     color: #bfe0ff;
     text-decoration: none;
+    font-weight: 600;
+
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 6px;
+
+    transition: background 0.15s, color 0.15s;
 }
+
+.topbar a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.topbar span {
+    color: #cbd5e1;
+    font-size: 14px;
+}
+
+/* -------------------------------------------------------------------- */
+/*  Layout                                                              */
+/* -------------------------------------------------------------------- */
 
 .container {
     max-width: 1050px;
     margin: auto;
-    padding: 30px 24px;
+    padding: 30px 24px 60px;
 }
 
 h1 {
     margin-bottom: 4px;
+    font-size: 30px;
+    letter-spacing: -0.4px;
+}
+
+h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
 }
 
 .subtitle,
 .hint {
-    color: #64748b;
+    color: var(--muted);
+    font-size: 14px;
 }
 
 .subtitle {
     margin-top: 0;
 }
 
+.hint {
+    margin: 8px 0 0;
+}
+
+code {
+    background: #eef1f5;
+    color: #334155;
+
+    padding: 2px 6px;
+    border-radius: 4px;
+
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9em;
+
+    /* i nomi file lunghi non devono sfondare la card */
+    overflow-wrap: anywhere;
+}
+
 .card {
-    background: #fff;
-    border: 1px solid #d5dee7;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 9px;
 
     padding: 20px;
     margin: 16px 0;
 }
 
+/* -------------------------------------------------------------------- */
+/*  Form                                                                */
+/* -------------------------------------------------------------------- */
+
 label {
     display: block;
     font-weight: 650;
     margin-bottom: 6px;
+}
+
+/* le label dentro le griglie sono descrittori di campo, non titoli */
+.params label,
+.gh-grid label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
 }
 
 .params,
@@ -85,12 +176,67 @@ input {
     width: 100%;
     padding: 9px;
 
+    background: #fff;
+    color: inherit;
+
     border: 1px solid #c8d1dc;
     border-radius: 6px;
+
+    font: inherit;
+    font-size: 14px;
+
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+input:hover:not([type="file"]) {
+    border-color: #a9b6c6;
+}
+
+input:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+input:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    outline: none;
+}
+
+input[type="file"] {
+    padding: 8px;
+    cursor: pointer;
+    background: #fbfcfd;
+}
+
+input[type="file"]::file-selector-button {
+    background: #eef1f5;
+    color: #334155;
+
+    border: 1px solid #c8d1dc;
+    border-radius: 5px;
+
+    padding: 6px 12px;
+    margin-right: 12px;
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #e2e7ee;
+}
+
+/* -------------------------------------------------------------------- */
+/*  Bottoni                                                             */
+/* -------------------------------------------------------------------- */
+
 button {
-    background: #1f883d;
+    background: var(--green);
     color: #fff;
 
     border: 0;
@@ -98,21 +244,46 @@ button {
 
     padding: 10px 16px;
 
+    font: inherit;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+
+    transition: background 0.15s, opacity 0.15s;
+}
+
+button:hover:not(:disabled) {
+    background: var(--green-dark);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(1px);
 }
 
 button:disabled {
     background: #8c959f;
+    cursor: not-allowed;
+}
+
+/* durante l'elaborazione il cursore segnala attesa, non blocco */
+button:disabled.busy {
     cursor: wait;
 }
 
 .secondary {
-    background: #1769aa;
+    background: var(--blue);
+}
+
+.secondary:hover:not(:disabled) {
+    background: var(--blue-dark);
 }
 
 .danger {
-    background: #cf222e;
+    background: var(--red);
+}
+
+.danger:hover:not(:disabled) {
+    background: var(--red-dark);
 }
 
 .action,
@@ -124,20 +295,34 @@ button:disabled {
     gap: 10px;
 }
 
+.buttons {
+    flex-wrap: wrap;
+}
+
 .history-head {
     justify-content: space-between;
+    gap: 16px;
+}
+
+.history-head .hint {
+    margin-top: 2px;
 }
 
 .hidden {
     display: none !important;
 }
 
+/* -------------------------------------------------------------------- */
+/*  Spinner e messaggi                                                  */
+/* -------------------------------------------------------------------- */
+
 .spinner {
     width: 19px;
     height: 19px;
+    flex: none;
 
     border: 3px solid #d0d7de;
-    border-top-color: #1f883d;
+    border-top-color: var(--green);
     border-radius: 50%;
 
     animation: spin 0.8s linear infinite;
@@ -149,6 +334,16 @@ button:disabled {
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation-duration: 2s;
+    }
+
+    * {
+        transition-duration: 0.01ms !important;
+    }
+}
+
 .error {
     background: #fff1f0;
     color: #b42318;
@@ -156,8 +351,66 @@ button:disabled {
     border: 1px solid #f4aaa4;
     border-radius: 7px;
 
-    padding: 11px;
+    padding: 11px 14px;
+    margin: 16px 0;
+
+    font-size: 14px;
+
+    /* i traceback di Pyodide sono lunghi: vanno mandati a capo */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
+
+/* -------------------------------------------------------------------- */
+/*  Tab Raw / Exploded                                                  */
+/* -------------------------------------------------------------------- */
+
+.tabs {
+    display: flex;
+    gap: 4px;
+
+    margin: 14px 0 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.tabs .tab {
+    background: transparent;
+    color: var(--muted);
+
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+
+    padding: 8px 18px;
+    margin-bottom: -1px;
+
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.tabs .tab:hover:not(.active) {
+    background: #eef1f5;
+    color: var(--text);
+}
+
+.tabs .tab.active {
+    background: var(--surface);
+    color: var(--text);
+
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+}
+
+/* con le tab sopra, la tabella si aggancia senza doppio bordo */
+.tabs + .table-wrap {
+    margin-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* -------------------------------------------------------------------- */
+/*  Tabelle                                                             */
+/* -------------------------------------------------------------------- */
 
 .table-wrap {
     overflow: auto;
@@ -166,8 +419,10 @@ button:disabled {
 
     margin: 14px 0;
 
-    border: 1px solid #d5dee7;
+    border: 1px solid var(--border);
     border-radius: 7px;
+
+    background: var(--surface);
 }
 
 table {
@@ -180,7 +435,7 @@ th,
 td {
     padding: 9px;
 
-    border-bottom: 1px solid #dfe5eb;
+    border-bottom: 1px solid var(--border-soft);
 
     text-align: left;
     white-space: nowrap;
@@ -191,24 +446,81 @@ th {
 
     position: sticky;
     top: 0;
+    z-index: 2;
+
+    font-weight: 650;
+
+    /* la sticky non disegna i bordi: servono gli shadow */
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+tbody tr:hover {
+    background: #eef4fb;
+}
+
+td:empty::after {
+    content: "—";
+    color: #b8c1cc;
+}
+
+.row-actions {
+    gap: 8px;
 }
 
 .row-actions button {
-    padding: 6px 9px;
+    padding: 6px 10px;
     font-size: 12px;
 }
 
+/* -------------------------------------------------------------------- */
+/*  Configurazione GitHub                                               */
+/* -------------------------------------------------------------------- */
+
 details {
     margin-top: 15px;
+
+    background: #fafbfc;
+    border: 1px solid var(--border-soft);
+    border-radius: 7px;
+
+    padding: 12px 14px;
+}
+
+details[open] {
+    padding-bottom: 16px;
 }
 
 summary {
     cursor: pointer;
 
-    color: #1769aa;
+    color: var(--blue);
     font-weight: 700;
+    font-size: 14px;
 
+    list-style-position: inside;
+}
+
+details[open] summary {
     margin-bottom: 12px;
+}
+
+summary:hover {
+    color: var(--blue-dark);
+}
+
+details > label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 12px;
 }
 
 .remember {
@@ -218,14 +530,35 @@ summary {
 
     margin-top: 10px;
 
+    font-size: 13px;
     font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
 }
 
 .remember input {
     width: auto;
+    margin: 0;
+    cursor: pointer;
 }
 
+/* -------------------------------------------------------------------- */
+/*  Responsive                                                          */
+/* -------------------------------------------------------------------- */
+
 @media (max-width: 720px) {
+    .container {
+        padding: 22px 16px 48px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
     .params,
     .gh-grid {
         grid-template-columns: 1fr;
@@ -234,5 +567,13 @@ summary {
     .history-head {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .buttons button {
+        flex: 1 1 auto;
+    }
+
+    .table-wrap {
+        max-height: 60vh;
     }
 }
