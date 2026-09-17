@@ -1,6 +1,9 @@
+import base64
 import csv
 import io
 import json
+import re
+import zipfile
 
 import openpyxl
 
@@ -20,6 +23,18 @@ FIELDS = [
     "EBA_Sign",
     "Coordinate",
 ]
+
+# campi che nell'esplosione vengono presi dalla riga di dettaglio (foglia)
+DETAIL_FIELDS = [
+    "Cod_Conto",
+    "Cod_Dest2",
+    "Cod_Dest3",
+    "Cod_Dest4",
+    "Cod_Dest5",
+    "Cod_Categoria",
+]
+
+MAX_DEPTH = 20
 
 
 def rgb(cell):
@@ -135,7 +150,197 @@ def parse(value):
     )
 
 
-def process_workbook(path):
+# --------------------------------------------------------------------------- #
+#  ESPLOSIONE
+# --------------------------------------------------------------------------- #
+
+def split_dest(value):
+    """'FR_IFRS,FR_NGAAP' -> ['FR_IFRS', 'FR_NGAAP']."""
+    if value is None:
+        return [None]
+
+    parts = [
+        part.strip()
+        for part in str(value).replace(";", ",").split(",")
+        if part.strip()
+    ]
+
+    return parts or [None]
+
+
+def explode_dest3(records):
+    """Duplica la riga per ogni valore presente in Cod_Dest3."""
+    exploded = []
+
+    for record in records:
+        for value in split_dest(record.get("Cod_Dest3")):
+            copy = dict(record)
+            copy["Cod_Dest3"] = value
+            exploded.append(copy)
+
+    return exploded
+
+
+def formula_refs(formula):
+    """SUM(R0020,R0030) -> ['r0020', 'r0030']. None se non e' una SUM."""
+    if not formula:
+        return []
+
+    matches = re.findall(r"R\s*0*\d+", str(formula), flags=re.IGNORECASE)
+
+    return [
+        "r" + re.sub(r"\D", "", match).zfill(4)
+        for match in matches
+    ]
+
+
+def row_key(record):
+    return (
+        record.get("Id_Tab"),
+        record.get("Column"),
+        str(record.get("Row") or "").strip().lower(),
+    )
+
+
+def has_formula(record):
+    return bool(str(record.get("Formula") or "").strip())
+
+
+def build_index(records):
+    """Mappa (Id_Tab, Column, row) -> {'details': [...], 'refs': [...]}."""
+    index = {}
+
+    for record in records:
+        key = row_key(record)
+        node = index.setdefault(key, {"details": [], "refs": []})
+
+        if has_formula(record):
+            for ref in formula_refs(record["Formula"]):
+                ref_key = (key[0], key[1], ref)
+
+                if ref_key not in node["refs"]:
+                    node["refs"].append(ref_key)
+        else:
+            node["details"].append(record)
+
+    return index
+
+
+def resolve_leaves(key, index, cache, visiting, depth=0):
+    """Scende ricorsivamente fino alle righe senza formula."""
+    if key in cache:
+        return cache[key]
+
+    node = index.get(key)
+
+    if node is None or not node["refs"] or depth >= MAX_DEPTH:
+        return [key] if node and node["details"] else []
+
+    if key in visiting:          # riferimento circolare: taglio il ramo
+        return []
+
+    visiting.add(key)
+
+    leaves = []
+
+    for ref_key in node["refs"]:
+        ref_node = index.get(ref_key)
+
+        if ref_node is None:
+            continue
+
+        if ref_node["refs"]:
+            children = resolve_leaves(
+                ref_key,
+                index,
+                cache,
+                visiting,
+                depth + 1
+            )
+        else:
+            children = [ref_key] if ref_node["details"] else []
+
+        for child in children:
+            if child not in leaves:      # dedup sui rami convergenti
+                leaves.append(child)
+
+    visiting.discard(key)
+    cache[key] = leaves
+
+    return leaves
+
+
+def explode_records(records):
+    """Dest3 esploso + SUM risolte fino alle foglie, senza duplicati."""
+    base = explode_dest3(records)
+    index = build_index(base)
+
+    cache = {}
+    output = []
+    seen = set()
+
+    for record in base:
+
+        if not has_formula(record):
+            output.append(record)
+            continue
+
+        leaves = resolve_leaves(row_key(record), index, cache, set())
+
+        for leaf_key in leaves:
+            for detail in index[leaf_key]["details"]:
+
+                row = dict(record)
+
+                for field in DETAIL_FIELDS:
+                    row[field] = detail.get(field)
+
+                signature = tuple(row.get(field) for field in FIELDS[:-1])
+
+                if signature in seen:
+                    continue
+
+                seen.add(signature)
+                output.append(row)
+
+    return output
+
+
+# --------------------------------------------------------------------------- #
+#  OUTPUT
+# --------------------------------------------------------------------------- #
+
+def to_csv(records):
+    buffer = io.StringIO(newline="")
+
+    writer = csv.DictWriter(
+        buffer,
+        fieldnames=FIELDS,
+        lineterminator="\n",
+        extrasaction="ignore",
+    )
+
+    writer.writeheader()
+    writer.writerows(records)
+
+    return buffer.getvalue()
+
+
+def to_zip(raw_csv, exploded_csv):
+    buffer = io.BytesIO()
+
+    with zipfile.ZipFile(
+        buffer,
+        mode="w",
+        compression=zipfile.ZIP_DEFLATED
+    ) as archive:
+        archive.writestr("mapping_raw.csv", raw_csv)
+        archive.writestr("mapping_exploded.csv", exploded_csv)
+
+    return buffer.getvalue()
+
+
+def extract_records(path):
     workbook = openpyxl.load_workbook(
         path,
         data_only=False
@@ -259,22 +464,40 @@ def process_workbook(path):
                         }
                     )
 
-    output = io.StringIO(newline="")
+    return records
 
-    writer = csv.DictWriter(
-        output,
-        fieldnames=FIELDS,
-        lineterminator="\n"
-    )
 
-    writer.writeheader()
-    writer.writerows(records)
+def process_workbook(path, zip_path=None):
+    records = extract_records(path)
+    exploded = explode_records(records)
+
+    raw_csv = to_csv(records)
+    exploded_csv = to_csv(exploded)
+
+    archive = to_zip(raw_csv, exploded_csv)
+
+    if zip_path:
+        with open(zip_path, "wb") as handle:
+            handle.write(archive)
 
     return json.dumps(
         {
-            "records": records,
-            "csv": output.getvalue(),
+            "zip_base64": base64.b64encode(archive).decode("ascii"),
+            "zip_name": "mapping.zip",
+            "files": ["mapping_raw.csv", "mapping_exploded.csv"],
             "count": len(records),
+            "count_exploded": len(exploded),
         },
         ensure_ascii=False,
+    )
+
+
+if __name__ == "__main__":
+    import sys
+
+    print(
+        process_workbook(
+            sys.argv[1],
+            sys.argv[2] if len(sys.argv) > 2 else "mapping.zip",
+        )[:400]
     )
